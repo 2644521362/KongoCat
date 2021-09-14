@@ -294,9 +294,8 @@ class WordDetect:
             ans_in_lines.extend(self.get_sensitive_word_list(line, lines))
 
             for i in ans_in_lines:
-                self.answer.append("Line" + str(lines) + ":<" + i[2] + ">" + line[i[0]:i[0] + i[1]] + "\n")
-
-
+                self.answer.append("Line" + str(lines) + ": <" + i[2] + "> " + line[i[0]:i[0] + i[1]] + "\n")
+        
 
 if __name__ == '__main__':
     t = time.time()
