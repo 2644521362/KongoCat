@@ -258,7 +258,7 @@ class WordDetect:
 
     def output_doc(self, filename):
         with open(filename, 'a', encoding='utf-8') as file_object:
-            file_object.write("Total : " + str(self.index) + '\n')
+            file_object.write("Total: " + str(self.index) + '\n')
             for info in self.answer:
                 file_object.write(info)
 
