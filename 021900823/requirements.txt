@@ -1,6 +1,3 @@
-logging 
-sys
-zhconv
-time
-pypinyin
-pychai
+zhconv==1.4.2
+pypinyin==0.42.0
+pychai==1.0.1
