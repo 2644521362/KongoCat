@@ -290,9 +290,13 @@ class WordDetect:
                             index_text -= 1
                             need_back = False
                 now_map = self.sensitive_word_map
-                start_index = -1
+
                 original_length = -1
+                if start_index != -1:
+                    index_text = start_index
+                start_index = -1
                 index_text += 1
+
         return ans_location
 
     def output_doc(self, filename):
