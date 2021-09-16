@@ -158,10 +158,10 @@ class WordDetect:
                     if not need_jump:
                         original_length-=index_of_nonmean
                         index_of_nonmean=0
-                    if str(lines) + str(start_index) not in self.already_exist.keys():
+                    if str(lines) +"-"+ str(start_index) not in self.already_exist.keys():
                         ans_location.append(
                             (start_index, original_length - 1, self.transfomer_hanzi[temp_now_map.get("word")]))
-                    self.already_exist[str(lines) + str(start_index)] = 1
+                    self.already_exist[str(lines) +"-"+ str(start_index)] = 1
                     now_map = self.sensitive_word_map  # 恢复now_map
                     original_length = -1
                     start_index = -1
@@ -180,10 +180,10 @@ class WordDetect:
                     if not temp_now_map and now_map.get("canBeMore"):
 
                         if index_text == len(txt) - 2:
-                            if str(lines) + str(start_index) not in self.already_exist.keys():
+                            if str(lines) +"-"+ str(start_index) not in self.already_exist.keys():
                                 ans_location.append(
                                     (start_index, original_length, self.transfomer_hanzi[now_map.get("word")]))
-                            self.already_exist[str(lines) + str(start_index)] = 1
+                            self.already_exist[str(lines) +"-"+ str(start_index)] = 1
                             now_map = self.sensitive_word_map  # 恢复now_map
                             original_length = -1
                             start_index = -1
@@ -200,10 +200,10 @@ class WordDetect:
                         original_length += 1
                         continue
                     else:
-                        if str(lines) + str(start_index) not in self.already_exist.keys():
+                        if str(lines) +"-"+ str(start_index) not in self.already_exist.keys():
                             ans_location.append(
                                 (start_index, original_length, self.transfomer_hanzi[now_map.get("word")]))
-                        self.already_exist[str(lines) + str(start_index)] = 1
+                        self.already_exist[str(lines) +"-"+ str(start_index)] = 1
                         now_map = self.sensitive_word_map  # 恢复now_map
                         original_length = -1
                         start_index = -1
@@ -228,10 +228,10 @@ class WordDetect:
                         original_length-=index_of_nonmean
                         index_of_nonmean=0
                     need_jump = True
-                    if str(lines) + str(start_index) not in self.already_exist.keys():
+                    if str(lines) +"-"+ str(start_index) not in self.already_exist.keys():
                         ans_location.append(
                             (start_index, original_length - 1, self.transfomer_hanzi[temp_now_map.get("word")]))
-                    self.already_exist[str(lines) + str(start_index)] = 1
+                    self.already_exist[str(lines) +"-"+ str(start_index)] = 1
                     now_map = self.sensitive_word_map  # 恢复now_map
                     original_length = -1
                     start_index = -1
@@ -269,10 +269,10 @@ class WordDetect:
                         need_back=True
                         if now_map.get("isEnd") == 1:  # 结束识别
                             original_length -= 1
-                            if str(lines) + str(start_index) not in self.already_exist.keys():
+                            if str(lines) +"-"+ str(start_index) not in self.already_exist.keys():
                                 ans_location.append(
                                     (start_index, original_length, self.transfomer_hanzi[now_map.get("word")]))
-                            self.already_exist[str(lines) + str(start_index)] = 1
+                            self.already_exist[str(lines) +"-"+ str(start_index)] = 1
                             now_map = self.sensitive_word_map  # 恢复now_map
                             original_length = -1
                             start_index = -1
@@ -296,7 +296,12 @@ class WordDetect:
                     index_text = start_index
                 start_index = -1
                 index_text += 1
-
+        if temp_now_map:
+            if str(lines) + "-" + str(start_index) not in self.already_exist.keys():
+                ans_location.append(
+                    (start_index, original_length - 2, self.transfomer_hanzi[temp_now_map.get("word")]))
+            self.already_exist[str(lines) + "-" + str(start_index)] = 1
+            self.index += 1
         return ans_location
 
     def output_doc(self, filename):
