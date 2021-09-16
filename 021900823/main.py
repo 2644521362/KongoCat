@@ -27,7 +27,7 @@ class WordDetect:
 
         original_sensitive_word = sorted([i.split('\n')[0] for i in original_sensitive_word])  # 按照换行符区分不同敏感词
 
-        for string in original_sensitive_word:    # 增加汉字组合 去除某些不需要的组合
+        for string in original_sensitive_word:  # 增加汉字组合 去除某些不需要的组合
             pinyin_sentitive_word.append(string.lower())
             temp_word = ""
             if '\u4e00' <= string[0] <= '\u9fff':
@@ -46,7 +46,7 @@ class WordDetect:
                             second = second.second
                         temp_word += first.name[0]
                         temp_word += second.name
-                        self.need_pass[first.name[0]] = 1  #对于偏旁来说 拼音的组合不被需要
+                        self.need_pass[first.name[0]] = 1  # 对于偏旁来说 拼音的组合不被需要
                         self.need_pass[second.name] = 1
                         self.need_another_part[first.name[0]] = second.name  # 对于偏旁来说 汉字的组合需要增加另一半
                     else:
@@ -97,13 +97,11 @@ class WordDetect:
                 self.transfomer_hanzi[temp_word] = temp_word
 
         pinyin_sentitive_word = list(set(pinyin_sentitive_word))  # 去重
-
         self.sensitive_word_map = self.init_sensitive_word_map(pinyin_sentitive_word)  # 构造trie树
 
         self.get_answear_by_line(org_txt)  # 得到答案数组
 
         self.output_doc(ans_txt)  # 输出到文件
-
 
     def init_sensitive_word_map(self, sensitive_word_list):  # 造树过程，sensitive_word_list包含各种组合的敏感词
         sensitive_word_map = {}
@@ -141,6 +139,9 @@ class WordDetect:
         index_text = 0
         temp_now_map = {}
         ingore_index = -1
+        index_of_nonmean=0
+        need_jump =True
+        need_back = False
         while index_text < len(txt):
             key = txt[index_text]
             if key.isalpha():
@@ -151,9 +152,29 @@ class WordDetect:
             if not key.isalpha() and not ('\u4e00' <= key <= '\u9fff'):  # 去除掉 符号 空格等
                 original_length += 1
                 index_text += 1
+                index_of_nonmean+=1
+                need_jump=False
+                if index_text == len(txt) - 2 and temp_now_map:
+                    if not need_jump:
+                        original_length-=index_of_nonmean
+                        index_of_nonmean=0
+                    if str(lines) + str(start_index) not in self.already_exist.keys():
+                        ans_location.append(
+                            (start_index, original_length - 1, self.transfomer_hanzi[temp_now_map.get("word")]))
+                    self.already_exist[str(lines) + str(start_index)] = 1
+                    now_map = self.sensitive_word_map  # 恢复now_map
+                    original_length = -1
+                    start_index = -1
+                    scan_mode = -1
+                    self.index += 1
+                    index_text -= ingore_index
+                    ingore_index=-1
+                    temp_now_map = {}
+                    continue
                 continue
             flag_find = key in now_map
             if flag_find:
+                need_back = True
                 now_map = now_map.get(key)
                 if now_map.get("isEnd") == 1:  # 结束识别
                     if not temp_now_map and now_map.get("canBeMore"):
@@ -170,6 +191,8 @@ class WordDetect:
                             self.index += 1
                             index_text += 1
                             temp_now_map = {}
+                            index_text -= ingore_index
+                            ingore_index = -1
                             continue
                         temp_now_map = now_map  # 保存当前状态
                         ingore_index += 1
@@ -188,16 +211,23 @@ class WordDetect:
                         self.index += 1
                         index_text += 1
                         temp_now_map = {}
+                        index_text -= ingore_index
+                        ingore_index = -1
                         continue
                 if (now_map.get("isStart") == 1) & (start_index == -1):  # 找到敏感词头
                     if scan_mode == -1 and ('\u4e00' <= key <= '\u9fff'):
                         scan_mode = 1
                     original_length = 1
                     start_index = index_text
+                    index_of_nonmean=0
                 original_length += 1
                 index_text += 1
             else:
                 if temp_now_map:
+                    if not need_jump:
+                        original_length-=index_of_nonmean
+                        index_of_nonmean=0
+                    need_jump = True
                     if str(lines) + str(start_index) not in self.already_exist.keys():
                         ans_location.append(
                             (start_index, original_length - 1, self.transfomer_hanzi[temp_now_map.get("word")]))
@@ -208,9 +238,11 @@ class WordDetect:
                     scan_mode = -1
                     self.index += 1
                     index_text -= ingore_index
+                    ingore_index=-1
                     temp_now_map = {}
                     continue
                 if scan_mode == 1:
+
                     if key.isalpha() or key.isdecimal():  # 这里屏蔽不了中文 不知道为啥
                         if not ('\u4e00' <= key <= '\u9fff'):
                             original_length += 1
@@ -234,6 +266,7 @@ class WordDetect:
                             break
                     if noYet:
                         original_length += 1
+                        need_back=True
                         if now_map.get("isEnd") == 1:  # 结束识别
                             original_length -= 1
                             if str(lines) + str(start_index) not in self.already_exist.keys():
@@ -247,9 +280,15 @@ class WordDetect:
                             self.index += 1
                             index_text += 1
                             temp_now_map = {}
+                            index_text -= ingore_index
+                            ingore_index = -1
                             continue
                         index_text += 1
                         continue
+                    else:
+                        if need_back:
+                            index_text -= 1
+                            need_back = False
                 now_map = self.sensitive_word_map
                 start_index = -1
                 original_length = -1
@@ -282,7 +321,8 @@ class WordDetect:
             self.dfsHelper(nums, tmp, result)
             tmp.pop()
         return
-    def get_answear_by_line(self,org_txt):
+
+    def get_answear_by_line(self, org_txt):
         file = open(org_txt, encoding="utf-8")
         lines = 0
         while 1:
@@ -295,7 +335,7 @@ class WordDetect:
 
             for i in ans_in_lines:
                 self.answer.append("Line" + str(lines) + ": <" + i[2] + "> " + line[i[0]:i[0] + i[1]] + "\n")
-        
+
 
 if __name__ == '__main__':
     t = time.time()
@@ -307,7 +347,7 @@ if __name__ == '__main__':
     else:
         words_txt = 'words.txt'
         org_txt = 'org.txt'
-        ans_txt = 'ans.txt'
+        ans_txt = 'ans3.txt'
     try:
         ans = WordDetect(words_txt, org_txt, ans_txt)
     except IOError:
